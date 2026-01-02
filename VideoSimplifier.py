@@ -1,7 +1,28 @@
 
+
 import cv2
 import numpy as np
 import json
+
+def select_cell_color(frame, x, y):
+	"""
+	Selects the color for a given cell at (x, y) in the frame.
+	By default, returns the RGB value at the center pixel.
+	This function can be replaced or modified for different color selection strategies.
+	"""
+	rgb = frame[y, x, :3]
+	rgb = rgb[::-1]  # Convert BGR to RGB
+	return rgb
+
+def apply_filter_on_color(rgb):
+	"""
+	Applies a simple filter to the RGB color.
+	For demonstration, this function increases brightness by 10%.
+	"""
+	# factor = 1.1
+	# rgb = np.clip(rgb * factor, 0, 255).astype(np.uint8) faz o valor ficar entre 0 e 255
+	luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+	return np.array([255, 255, 255], dtype=np.uint8) if luminance > 127.5 else np.array([0, 0, 0], dtype=np.uint8)
 
 def extract_frames(video_path):
 	cap = cv2.VideoCapture(video_path)
@@ -9,8 +30,8 @@ def extract_frames(video_path):
 		print(f"Error opening video file: {video_path}")
 		return
 	# Customizable grid size
-	grid_rows = 260  # Change as needed
-	grid_cols = 480  # Change as needed
+	grid_rows = 60  # Change as needed
+	grid_cols = 80  # Change as needed
     
 	frame_count = 0
 	all_frames = []
@@ -39,13 +60,12 @@ def extract_frames(video_path):
 				row_centers.append((x, y))
 			centers.append(row_centers)
 
-		# Extract RGB values at each center, store as array
+		# Extract color values at each center using modular function
 		frame_grid = np.zeros((grid_rows, grid_cols, 3), dtype=np.uint8)
 		for i, row in enumerate(centers):
 			for j, (x, y) in enumerate(row):
-				rgb = frame[y, x, :3]
-				rgb = rgb[::-1]  # Convert BGR to RGB
-				frame_grid[i, j] = rgb
+				rgb = select_cell_color(frame, x, y)
+				frame_grid[i, j] = apply_filter_on_color(rgb)
 		all_frames.append(frame_grid.astype(np.uint8))
 		frame_count += 1
 
