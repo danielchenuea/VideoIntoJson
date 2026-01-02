@@ -7,40 +7,6 @@ import time
 NPY_RAWVIDEO_PATH = "videoContent.npz"  # Path to the numpy file
 JSON_CONFIG_PATH = "videoConfig.json"  # Path to the JSON config file
 
-def draw_grid_frame(matrix, width, height, grid_rows, grid_cols):
-    """
-    Reconstruct a frame from the grid matrix.
-    Each cell is filled with its RGB color.
-    """
-    frame = np.zeros((height, width), dtype=np.uint8)
-    cell_w = width // grid_cols
-    cell_h = height // grid_rows
-    pos = 0
-    for r in range(grid_rows):
-        for c in range(grid_cols):
-            # Find cell by position
-            cell = None
-            if isinstance(matrix[r][c], dict) and 'pos' in matrix[r][c]:
-                cell = matrix[r][c]
-            else:
-                # Fallback: search for cell with matching pos
-                for row in matrix:
-                    for item in row:
-                        if item.get('pos') == pos:
-                            cell = item
-                            break
-                    if cell:
-                        break
-            x0 = c * cell_w
-            y0 = r * cell_h
-            x1 = x0 + cell_w
-            y1 = y0 + cell_h
-            color = cell['rgb'] if cell else (0, 0, 0)
-            color = (255, 255, 255) if color == 1 else (0, 0, 0)
-            frame[y0:y1, x0:x1] = color[::-1]  # Convert RGB to BGR for OpenCV
-            pos += 1
-    return frame
-
 
 def play_video_from_numpy(npy_path, json_config):
     frames = np.load(npy_path)['arr_0']
@@ -74,7 +40,10 @@ def play_video_from_numpy(npy_path, json_config):
     frame_idx = 0
     playing = True
 
+    # prev_frame_time = time.time()
     while True:
+        first_frame_time = time.time()
+        # print(f"Inter-frame time: {inter_frame_time:.2f} ms")
 
         frame_data = frames[frame_idx]
         # frame_data shape: (grid_rows, grid_cols, 3)
@@ -89,10 +58,17 @@ def play_video_from_numpy(npy_path, json_config):
                 y0 = r * cell_h
                 x1 = x0 + cell_w
                 y1 = y0 + cell_h
+                color = (255, 255, 255) if color == 1 else (0, 0, 0)
                 frame[y0:y1, x0:x1] = color[::-1]  # Convert RGB to BGR for OpenCV
         key_delay = int(1000 / fps) if fps > 0 else 1000
         cv2.imshow(name, frame)
-        key = cv2.waitKey(key_delay) & 0xFF
+
+        second_frame_time = time.time()
+        inter_frame_time = (second_frame_time - first_frame_time) * 1000  # ms
+        # key_delay = max(1, key_delay - int(inter_frame_time))
+        # print(key_delay)
+
+        key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
         elif key == ord(' '):  # Pause/play toggle

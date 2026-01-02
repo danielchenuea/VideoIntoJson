@@ -27,8 +27,8 @@ def extract_frames(video_path):
 		print(f"Error opening video file: {video_path}")
 		return
 	# Customizable grid size
-	grid_rows = 60  # Change as needed
-	grid_cols = 80  # Change as needed
+	grid_rows = 80  # Change as needed
+	grid_cols = 60  # Change as needed
     
 	frame_count = 0
 	all_frames = []
@@ -85,8 +85,8 @@ def extract_frames(video_path):
 	}
 
 	# Save all matrices to JSON file
-	output_content = "videoContent.npz"
-	output_config = "videoConfig.json"
+	output_content = "videoContentInverted.npz"
+	output_config = "videoConfigInverted.json"
 	with open(output_config, "w") as f:
 		json.dump(configJson, f, indent=2)
 
@@ -97,5 +97,5 @@ def extract_frames(video_path):
 	print("Done extracting frames.")
 
 if __name__ == "__main__":
-	video_path = "earth.mp4"  # Change to your video file path
+	video_path = "badapple.mp4"  # Change to your video file path
 	extract_frames(video_path)
